@@ -33,7 +33,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func setupEventTap() {
         let eventMask = (1 << CGEventType.scrollWheel.rawValue)
-
+        
         eventTap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
@@ -45,6 +45,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     let shiftModifier = UserDefaults.standard.bool(forKey: "shiftModifier")
                     let controlModifier = UserDefaults.standard.bool(forKey: "controlModifier")
                     let optionModifier = UserDefaults.standard.bool(forKey: "optionModifier")
+                    let reverseScroll = UserDefaults.standard.bool(forKey: "reverseScroll")
+                    var plusKeyStr: CGKeyCode = 0x18 // 0x18 is '+'
+                    var downKeyStr: CGKeyCode = 0x1B // 0x1B is '-'
 
                     var requiredFlags: CGEventFlags = []
                     if commandModifier {
@@ -60,31 +63,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         requiredFlags.insert(.maskAlternate)
                     }
                     
+                    if reverseScroll {
+                        plusKeyStr = 0x1B // 0x1B is '-'
+                        downKeyStr = 0x18 // 0x18 is '+'
+                    }
+                    
                     if event.flags.contains(requiredFlags) {
                         let scroll = event.getIntegerValueField(.scrollWheelEventDeltaAxis1)
                         if scroll > 0 {
-                            // Scroll Up, simulate Command + '+'
+                            // Scroll Up, simulate zoom in (using plusKeyStr)
                             let source = CGEventSource(stateID: .hidSystemState)
-                            let plusDown = CGEvent(keyboardEventSource: source, virtualKey: 0x18, keyDown: true) // 0x18 is '+'
-                            plusDown?.flags = .maskCommand
-                            let plusUp = CGEvent(keyboardEventSource: source, virtualKey: 0x18, keyDown: false)
-                            plusUp?.flags = .maskCommand
+                            let keyEventDown = CGEvent(keyboardEventSource: source, virtualKey: plusKeyStr, keyDown: true)
+                            keyEventDown?.flags = requiredFlags
+                            let keyEventUp = CGEvent(keyboardEventSource: source, virtualKey: plusKeyStr, keyDown: false)
+                            keyEventUp?.flags = requiredFlags
 
-                            plusDown?.post(tap: .cgAnnotatedSessionEventTap)
-                            plusUp?.post(tap: .cgAnnotatedSessionEventTap)
-                            
+                            keyEventDown?.post(tap: .cgAnnotatedSessionEventTap)
+                            keyEventUp?.post(tap: .cgAnnotatedSessionEventTap)
+
                             // Suppress the original scroll event
                             return nil
                         } else if scroll < 0 {
-                            // Scroll Down, simulate Command + '-'
+                            // Scroll Down, simulate zoom out (using downKeyStr)
                             let source = CGEventSource(stateID: .hidSystemState)
-                            let minusDown = CGEvent(keyboardEventSource: source, virtualKey: 0x1B, keyDown: true) // 0x1B is '-'
-                            minusDown?.flags = .maskCommand
-                            let minusUp = CGEvent(keyboardEventSource: source, virtualKey: 0x1B, keyDown: false)
-                            minusUp?.flags = .maskCommand
-                            
-                            minusDown?.post(tap: .cgAnnotatedSessionEventTap)
-                            minusUp?.post(tap: .cgAnnotatedSessionEventTap)
+                            let keyEventDown = CGEvent(keyboardEventSource: source, virtualKey: downKeyStr, keyDown: true)
+                            keyEventDown?.flags = requiredFlags
+                            let keyEventUp = CGEvent(keyboardEventSource: source, virtualKey: downKeyStr, keyDown: false)
+                            keyEventUp?.flags = requiredFlags
+
+                            keyEventDown?.post(tap: .cgAnnotatedSessionEventTap)
+                            keyEventUp?.post(tap: .cgAnnotatedSessionEventTap)
 
                             // Suppress the original scroll event
                             return nil
