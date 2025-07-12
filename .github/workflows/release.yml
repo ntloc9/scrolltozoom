@@ -1,0 +1,35 @@
+name: Create Release DMG
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag: 
+        description: 'Git tag for the release (e.g., v1.0.0)'
+        required: true
+
+jobs:
+  release:
+    runs-on: macos-15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.tag }}
+
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+    - name: Build app and Create DMG
+      run: |
+        chmod +x create_dmg.sh
+        ./create_dmg.sh
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: mousezoom.dmg
+        tag_name: ${{ github.event.inputs.tag }}
+        draft: false
+        prerelease: false
