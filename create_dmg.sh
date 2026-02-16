@@ -12,7 +12,7 @@ CONFIGURATION="Release"
 BUILD_DIR=$(xcodebuild -project "${PROJECT_NAME}.xcodeproj" -scheme "${APP_NAME}" -showBuildSettings -configuration "${CONFIGURATION}" | grep -m 1 "BUILT_PRODUCTS_DIR" | awk '{print $3}')
 APP_PATH="${BUILD_DIR}/${APP_NAME}.app"
 DMG_STAGING_DIR="./dmg_staging"
-DMG_NAME="${APP_NAME}.dmg"
+DMG_NAME="moumou.dmg"
 
 # --- Functions ---
 function print_info() {
@@ -56,7 +56,7 @@ ln -s /Applications "${DMG_STAGING_DIR}/Applications"
 
 # 6. Create the DMG file
 print_info "Creating DMG file: '${DMG_NAME}'..."
-hdiutil create -volname "${APP_NAME}" -srcfolder "${DMG_STAGING_DIR}" -ov -format UDBZ "${DMG_NAME}" || print_error "hdiutil failed to create DMG."
+hdiutil create -volname "mou mou" -srcfolder "${DMG_STAGING_DIR}" -ov -format UDBZ "${DMG_NAME}" || print_error "hdiutil failed to create DMG."
 
 # 7. Clean up staging directory
 print_info "Cleaning up staging directory..."
